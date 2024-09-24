@@ -227,6 +227,9 @@ def load_saved_filters():
 
 st.title('Alerts')
 st.sidebar.header('Observed Events')
+if st.sidebar.button('Recalculate'):
+    st.cache_data.clear()
+    st.experimental_rerun()
 saved_platforms, saved_events = load_saved_filters()
 selected_platforms = st.sidebar.multiselect(
     'Select Platforms', df_d['source'].unique(), default=saved_platforms
