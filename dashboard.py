@@ -94,7 +94,7 @@ def calc_data_h():
                 change_sign = '↓'
             if result['pvalue'] < alpha:
                 alerts.append({(source, event): [change_sign, round(result['pvalue'], 3), [succ_1, nobs_1], [succ_2, nobs_2]]})
-    return alerts
+    return alerts, df_h['hour'].min()
 
 @st.cache_data
 def calc_data_d():
@@ -122,7 +122,7 @@ def calc_data_d():
     return alerts
 
 def display_h(selected_platforms, selected_events):
-    alerts_h = calc_data_h()
+    alerts_h, cur_hour = calc_data_h()
     processed_data = []
     for item in alerts_h:
         for key, value in item.items():
@@ -161,7 +161,7 @@ def display_h(selected_platforms, selected_events):
 
     filtered_df = filtered_df[['Platform', 'Event', 'Change', 'p-value', 'Events / DAU last week', 'Events / DAU this week']]
 
-    st.caption('Last Hour')
+    st.caption(f'Last Hour: {cur_hour}, UTC')
     st.dataframe(filtered_df)
 
 
