@@ -43,20 +43,21 @@ def calc_stats(mean_0, mean_1, var_0, var_1, len_0, len_1, alpha=0.05, required_
         if mean_0 > mean_1:
             mean *= -1
 
-    cohen_d = mean_abs / sd
-    bound_value = special.nrdtrimn(alpha / 2, std, 0)
-    power = 1 - (stats.norm.cdf(x=bound_value, loc=mean_abs, scale=std) - 
-                 stats.norm.cdf(x=-bound_value, loc=mean_abs, scale=std))
-    analysis = TTestIndPower()
-    # todo: добавить обработчик для нуля
-    sample_size = analysis.solve_power(cohen_d, power=required_power, 
-                                  nobs1=None, alpha=alpha)
+    # cohen_d = mean_abs / sd
+    # bound_value = special.nrdtrimn(alpha / 2, std, 0)
+    # power = 1 - (stats.norm.cdf(x=bound_value, loc=mean_abs, scale=std) - 
+    #              stats.norm.cdf(x=-bound_value, loc=mean_abs, scale=std))
+    # analysis = TTestIndPower()
+    # # todo: добавить обработчик для нуля
+    # sample_size = analysis.solve_power(cohen_d, power=required_power, 
+    #                               nobs1=None, alpha=alpha)
 
-    return {"pvalue": pvalue, "power": power, 
-            "cohen_d": cohen_d, "sample_size": np.ceil(sample_size), 
-            "enough": sample_size <= min(len_0, len_1),
-            "ci": [np.array([stats.norm.ppf(alpha / 2, mean_abs, std), 
-                   stats.norm.ppf(1 - alpha / 2, mean_abs, std)])]}
+    # return {"pvalue": pvalue, "power": power, 
+    #         "cohen_d": cohen_d, "sample_size": np.ceil(sample_size), 
+    #         "enough": sample_size <= min(len_0, len_1),
+    #         "ci": [np.array([stats.norm.ppf(alpha / 2, mean_abs, std), 
+    #                stats.norm.ppf(1 - alpha / 2, mean_abs, std)])]}
+    return {"pvalue": pvalue}
 
 
 sql_worker: SqlWorker = SqlWorker()
@@ -88,10 +89,10 @@ def calc_data_h():
             if nobs_1 == 0:
                 continue
             result = calc_stats(succ_1/nobs_1, succ_2/nobs_2, (succ_1/nobs_1)*(1-succ_1/nobs_1), (succ_2/nobs_2)*(1-succ_2/nobs_2), nobs_1, nobs_2)
-            change_sign = '↓'
+            change_sign = '↑'
             if result['pvalue'] < alpha:
                 if nobs_2/succ_2:
-                    change_sign = '↑'
+                    change_sign = '↓'
                 alerts.append({(source, event): [change_sign, round(result['pvalue'], 3), [succ_1, nobs_1], [succ_2, nobs_2]]})
     return alerts
 
@@ -113,10 +114,10 @@ def calc_data_d():
             if nobs_1 == 0:
                 continue
             result = calc_stats(succ_1/nobs_1, succ_2/nobs_2, (succ_1/nobs_1)*(1-succ_1/nobs_1), (succ_2/nobs_2)*(1-succ_2/nobs_2), nobs_1, nobs_2)
-            change_sign = '↓'
+            change_sign = '↑'
             if result['pvalue'] < alpha:
                 if nobs_2/succ_2:
-                    change_sign = '↑'
+                    change_sign = '↓'
                 alerts.append({(source, event): [change_sign, round(result['pvalue'], 3), [succ_1, nobs_1], [succ_2, nobs_2]]})
     return alerts
 
@@ -210,6 +211,7 @@ def display_d(selected_platforms, selected_events):
 @st.cache_data
 def load_saved_filters():
     saved_platforms = cookies.get('selected_platforms')
+    print('selected_platforms=', cookies.get('selected_platforms'))
     saved_events = cookies.get('selected_events')
     if saved_platforms:
         saved_platforms = ast.literal_eval(saved_platforms)
@@ -219,23 +221,28 @@ def load_saved_filters():
         saved_events = ast.literal_eval(saved_events)
     else:
         saved_events = []
-    selected_platforms = st.sidebar.multiselect(
-        'Select Platforms', df_d['source'].unique(), default=saved_platforms
-    )
-    selected_events = st.sidebar.multiselect(
-        'Select Events', df_d['event'].unique(), default=saved_events
-    )
-    return selected_platforms, selected_events
+    
+    return saved_platforms, saved_events
 
 
 st.title('Alerts')
 st.sidebar.header('Observed Events')
-selected_platforms, selected_events = load_saved_filters()
+saved_platforms, saved_events = load_saved_filters()
+selected_platforms = st.sidebar.multiselect(
+    'Select Platforms', df_d['source'].unique(), default=saved_platforms
+)
+selected_events = st.sidebar.multiselect(
+    'Select Events', df_d['event'].unique(), default=saved_events
+)
 # selected_platforms = st.sidebar.multiselect('Select Platform(s)', df_d['source'].unique())
 # selected_events = st.sidebar.multiselect('Select Event(s)', df_d['event'].unique())
 display_h(selected_platforms, selected_events)
 display_d(selected_platforms, selected_events)
 
+print(cookies.get('selected_platforms'))
+
 cookies['selected_platforms'] = str(selected_platforms)
 cookies['selected_events'] = str(selected_events)
 cookies.save()
+
+print(cookies.get('selected_platforms'))

@@ -8,7 +8,19 @@ with dau_d as (
     where
         date in (today(), today() - 7)
     and
-        -- toHour(datetime) < toHour(now())
+        toHour(datetime) = toHour(now() - interval 1 hour)
+    group by
+        date,
+        source
+    union all select
+        date,
+        source,
+        uniq(unified_id) as dau
+    from
+        default.ug_rt_events_web
+    where
+        date in (today(), today() - 7)
+    and
         toHour(datetime) = toHour(now() - interval 1 hour)
     group by
         date,
@@ -23,6 +35,21 @@ events_d as (
         uniq(unified_id) as unified_cnt
     from
         default.ug_rt_events_app
+    where
+        date in (today(), today() - 7)
+    and
+        toHour(datetime) < toHour(now())
+    group by
+        date,
+        source,
+        event
+    union all select
+        date,
+        source as source,
+        event as event,
+        uniq(unified_id) as unified_cnt
+    from
+        default.ug_rt_events_web
     where
         date in (today(), today() - 7)
     and

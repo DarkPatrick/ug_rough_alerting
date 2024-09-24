@@ -12,6 +12,19 @@ with dau_h as (
     group by
         hour,
         source
+    union all select
+        toStartOfHour(datetime) as hour,
+        source,
+        uniq(unified_id) as dau
+    from
+        default.ug_rt_events_web
+    where
+        date in (today(), today() - 7)
+    and
+        toHour(datetime) = toHour(now() - interval 1 hour)
+    group by
+        hour,
+        source
 ),
 
 events_h as (
@@ -22,6 +35,21 @@ events_h as (
         uniq(unified_id) as unified_cnt
     from
         default.ug_rt_events_app
+    where
+        date in (today(), today() - 7)
+    and
+        hour < toStartOfHour(now())
+    group by
+        hour,
+        source,
+        event
+    union all select
+        toStartOfHour(datetime) as hour,
+        source as source,
+        event as event,
+        uniq(unified_id) as unified_cnt
+    from
+        default.ug_rt_events_web
     where
         date in (today(), today() - 7)
     and
