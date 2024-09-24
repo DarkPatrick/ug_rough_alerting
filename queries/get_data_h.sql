@@ -1,27 +1,36 @@
 with dau_h as (
     select
-        toStartOfHour(datetime) as hour,
-        source,
-        uniq(unified_id) as dau
-    from
-        default.ug_rt_events_app
-    where
-        date in (today(), today() - 7)
-    and
-        toHour(datetime) = toHour(now() - interval 1 hour)
-    group by
         hour,
-        source
-    union all select
-        toStartOfHour(datetime) as hour,
         source,
-        uniq(unified_id) as dau
-    from
-        default.ug_rt_events_web
-    where
-        date in (today(), today() - 7)
-    and
-        toHour(datetime) = toHour(now() - interval 1 hour)
+        sum(dau) as dau
+    from (
+        select
+            toStartOfHour(datetime) as hour,
+            source,
+            uniq(unified_id) as dau
+        from
+            default.ug_rt_events_app
+        where
+            date in (today(), today() - 7)
+        and
+            toHour(datetime) = toHour(now() - interval 1 hour)
+        group by
+            hour,
+            source
+        union all select
+            toStartOfHour(datetime) as hour,
+            source,
+            uniq(unified_id) as dau
+        from
+            default.ug_rt_events_web
+        where
+            date in (today(), today() - 7)
+        and
+            toHour(datetime) = toHour(now() - interval 1 hour)
+        group by
+            hour,
+            source
+    )
     group by
         hour,
         source
@@ -38,7 +47,7 @@ events_h as (
     where
         date in (today(), today() - 7)
     and
-        hour < toStartOfHour(now())
+        toHour(datetime) = toHour(now() - interval 1 hour)
     group by
         hour,
         source,
@@ -53,7 +62,7 @@ events_h as (
     where
         date in (today(), today() - 7)
     and
-        hour < toStartOfHour(now())
+        toHour(datetime) = toHour(now() - interval 1 hour)
     group by
         hour,
         source,

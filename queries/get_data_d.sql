@@ -2,26 +2,35 @@ with dau_d as (
     select
         date,
         source,
-        uniq(unified_id) as dau
-    from
-        default.ug_rt_events_app
-    where
-        date in (today(), today() - 7)
-    and
-        toHour(datetime) = toHour(now() - interval 1 hour)
-    group by
-        date,
-        source
-    union all select
-        date,
-        source,
-        uniq(unified_id) as dau
-    from
-        default.ug_rt_events_web
-    where
-        date in (today(), today() - 7)
-    and
-        toHour(datetime) = toHour(now() - interval 1 hour)
+        sum(dau) as dau
+    from (
+        select
+            date,
+            source,
+            uniq(unified_id) as dau
+        from
+            default.ug_rt_events_app
+        where
+            date in (today(), today() - 7)
+        and
+            toHour(datetime) < toHour(now())
+        group by
+            date,
+            source
+        union all select
+            date,
+            source,
+            uniq(unified_id) as dau
+        from
+            default.ug_rt_events_web
+        where
+            date in (today(), today() - 7)
+        and
+            toHour(datetime) < toHour(now())
+        group by
+            date,
+            source
+    )
     group by
         date,
         source
