@@ -91,7 +91,7 @@ def calc_data_h():
             result = calc_stats(succ_1/nobs_1, succ_2/nobs_2, (succ_1/nobs_1)*(1-succ_1/nobs_1), (succ_2/nobs_2)*(1-succ_2/nobs_2), nobs_1, nobs_2)
             change_sign = '↑'
             if result['pvalue'] < alpha:
-                if nobs_2/succ_2:
+                if nobs_2/succ_2 < succ_1/nobs_1:
                     change_sign = '↓'
                 alerts.append({(source, event): [change_sign, round(result['pvalue'], 3), [succ_1, nobs_1], [succ_2, nobs_2]]})
     return alerts
@@ -116,7 +116,7 @@ def calc_data_d():
             result = calc_stats(succ_1/nobs_1, succ_2/nobs_2, (succ_1/nobs_1)*(1-succ_1/nobs_1), (succ_2/nobs_2)*(1-succ_2/nobs_2), nobs_1, nobs_2)
             change_sign = '↑'
             if result['pvalue'] < alpha:
-                if nobs_2/succ_2:
+                if nobs_2/succ_2 < succ_1/nobs_1:
                     change_sign = '↓'
                 alerts.append({(source, event): [change_sign, round(result['pvalue'], 3), [succ_1, nobs_1], [succ_2, nobs_2]]})
     return alerts
